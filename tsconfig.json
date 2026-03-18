@@ -12,10 +12,12 @@
         "declarationDir": "./dist",
         "emitDeclarationOnly": false,
         "skipLibCheck": true,
-        "verbatimModuleSyntax": true
+        "verbatimModuleSyntax": true,
+        "types": ["vitest/globals"]
     },
     "include": [
-        "*.ts"
+        "*.ts",
+        "tests/**/*.ts"
     ],
     "exclude": [
         "node_modules",
