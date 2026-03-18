@@ -32,7 +32,7 @@ function resolveDefaultFontUrl(): string {
 }
 
 /**
- * Injects the bundled STVerticalMincho font into the document as a @font-face rule.
+ * Injects the bundled STVerticalMincho font into the document as a \@font-face rule.
  *
  * Call this once in your application entry point alongside `installPatches()`.
  * After calling this, you can use `'STVerticalMincho'` as the `fontFamily`
@@ -40,9 +40,8 @@ function resolveDefaultFontUrl(): string {
  * 
  * For SSR (Next.js, etc.), this function safe-guards against 'document is not defined'.
  *
- * @param options - Configuration options for font injection.
- * @param options.fontUrl - Optional custom URL for the font file. If not provided,
- *                          it attempts to resolve the URL relative to the library.
+ * @param fontUrl - Optional custom URL for the font file. If not provided,
+ *                  it attempts to resolve the URL relative to the library.
  *
  * @example
  * ```ts
@@ -52,12 +51,12 @@ function resolveDefaultFontUrl(): string {
  * injectFont();
  * 
  * // OR: Provide a custom path (useful for Next.js /public or CDNs)
- * // injectFont({ fontUrl: '/fonts/STVerticalMincho.ttf' });
+ * injectFont('/fonts/STVerticalMincho.ttf');
  *
  * installPatches();
  * ```
  */
-export function injectFont(options: { fontUrl?: string } = {}): void {
+export function injectFont(fontUrl?: string): void {
     // SSR Safe-guard: Skip if not in a browser environment
     if (typeof document === 'undefined') {
         return;
@@ -68,13 +67,13 @@ export function injectFont(options: { fontUrl?: string } = {}): void {
         return;
     }
 
-    const fontUrl = options.fontUrl || resolveDefaultFontUrl();
+    const url = fontUrl ?? resolveDefaultFontUrl();
     const style = document.createElement('style');
     style.id = STYLE_ELEMENT_ID;
     style.textContent = `
-@font-face {
+\@font-face {
     font-family: '${FONT_FAMILY_NAME}';
-    src: url('${fontUrl}') format('truetype');
+    src: url('${url}') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;

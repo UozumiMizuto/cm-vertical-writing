@@ -120,7 +120,7 @@ attachMouseListeners(wrapper);
 
 #### Next.js など SSR 環境での利用
 
-`injectFont()` はサーバーサイドで呼ばれても安全（`document` が存在しない場合は何もしない）ですが、パス解決が環境に依存するため、**`fontUrl` オプションで明示的に指定することを推奨します**。
+`injectFont()` はサーバーサイドで呼ばれても安全（`document` が存在しない場合は何もしない）ですが、自動的なパス解決は環境（ビルドツールやベースパスの設定）に強く依存するため、ブラウザで確実に読み込むには**フォントファイルを自身のサーバーに配置し、そのパスを引数で明示的に指定することを推奨します**。
 
 Next.js の場合は、フォントファイルを `public/fonts/` に配置し、以下のように設定してください。
 
@@ -137,8 +137,8 @@ import { injectFont, installPatches } from "@uozumi/cm-vertical-writing";
 
 useEffect(() => {
     installPatches();
-    // public/fonts/ に配置したフォントを明示的に指定
-    injectFont({ fontUrl: "/fonts/STVerticalMincho.ttf" });
+    // public/fonts/ に配置したフォントを明示的に指定（フルURLまたは相対パス）
+    injectFont("/fonts/STVerticalMincho.ttf");
 }, []);
 ```
 

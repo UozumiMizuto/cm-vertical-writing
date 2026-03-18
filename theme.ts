@@ -31,6 +31,16 @@ export const verticalTheme = (options: { fontFamily?: string, fontSize?: string,
             color: options.textColor || "inherit",
             fontFamily: options.fontFamily || "serif",
         },
+        ".cm-line": {
+            fontSize: "inherit",
+            lineHeight: "1.8", // Stable line height for vertical grid
+        },
+        // Prevent syntax highlighting from changing font metrics
+        ".cm-content *": {
+            fontSize: "inherit !important",
+            fontWeight: "inherit !important",
+            lineHeight: "inherit !important",
+        },
         ".cm-cursor": {
             borderLeft: "1.2px solid currentColor",
         }

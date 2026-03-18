@@ -4,14 +4,25 @@
  */
 
 // Store original implementations to restore later and for internal use
-const originals = {
+// We use a global variable to ensure we don't save already-patched versions
+const WIN = typeof window !== 'undefined' ? window : null;
+const DOC = typeof document !== 'undefined' ? document : null;
+
+// @ts-ignore
+const _originals = WIN?.__CM_VERTICAL_ORIGINALS__ || {
     elementGBCR: Element.prototype.getBoundingClientRect,
     rangeGBCR: Range.prototype.getBoundingClientRect,
     rangeGetClientRects: Range.prototype.getClientRects,
-    caretRange: document.caretRangeFromPoint ? document.caretRangeFromPoint.bind(document) : null,
+    caretRange: DOC?.caretRangeFromPoint ? DOC.caretRangeFromPoint.bind(DOC) : null,
     // @ts-ignore
-    caretPosition: document.caretPositionFromPoint ? document.caretPositionFromPoint.bind(document) : null
+    caretPosition: DOC?.caretPositionFromPoint ? DOC.caretPositionFromPoint.bind(DOC) : null
 };
+
+if (WIN && !(WIN as any).__CM_VERTICAL_ORIGINALS__) {
+    (WIN as any).__CM_VERTICAL_ORIGINALS__ = _originals;
+}
+
+const originals = _originals;
 
 let active = false;
 let wrapper: HTMLElement | null = null;

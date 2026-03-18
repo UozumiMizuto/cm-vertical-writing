@@ -1,12 +1,21 @@
-import { ViewPlugin, Decoration, type DecorationSet, type ViewUpdate, EditorView } from '@codemirror/view';
+import { WidgetType, ViewPlugin, Decoration, type DecorationSet, type ViewUpdate, EditorView } from '@codemirror/view';
 import { RangeSetBuilder } from '@codemirror/state';
 
 /**
+ * TCY Widget (Atomic rotated element)
+ */
+class TcyWidget extends WidgetType {
+    constructor(readonly text: string) { super() }
+    toDOM() {
+        let span = document.createElement("span")
+        span.className = "cm-tcy"
+        span.textContent = this.text
+        return span
+    }
+}
+
+/**
  * Tate-chu-yoko (Horizontal-in-Vertical)
- * Improvements: 
- * - Use lookaround (if supported) or specific boundary checks to handle Japanese text without \b.
- * - Targets: 2 digits (10-99), 2 characters, or 1-2 punctuation marks. 
- *   1-digit/1-char is usually rotated naturally by the vertical font, so we skip them.
  */
 export const tateChuYokoPlugin = ViewPlugin.fromClass(class {
     decorations: DecorationSet;
@@ -24,7 +33,6 @@ export const tateChuYokoPlugin = ViewPlugin.fromClass(class {
     buildDeco(view: EditorView) {
         const builder = new RangeSetBuilder<Decoration>();
         const { selection } = view.state;
-        const mark = Decoration.mark({ class: "cm-tcy" });
 
         // Match 2 digits, 2 Latin chars, or 1-2 punctuation marks (!, ?)
         const regex = /(?<![A-Za-z0-9])([A-Za-z0-9]{2}|[!?]{1,2})(?![A-Za-z0-9])/g;
@@ -46,11 +54,11 @@ export const tateChuYokoPlugin = ViewPlugin.fromClass(class {
                     const end = start + match[0].length;
 
                     // COORDINATE STABILITY FIX:
-                    // Avoid splitting DOM inside line if selection intersects.
-                    // This follows the rule: "Don't divide DOM nodes in ways that break coordinate mapping".
+                    // Only apply decoration when cursor is NOT inside.
+                    // Also use Replacement Widget instead of Mark to ensure atomic DOM node.
                     const isInside = selection.ranges.some(r => r.from <= end && r.to >= start);
                     if (!isInside) {
-                        builder.add(start, end, mark);
+                        builder.add(start, end, Decoration.replace({ widget: new TcyWidget(match[0]) }));
                     }
                 }
                 pos = line.to + 1;

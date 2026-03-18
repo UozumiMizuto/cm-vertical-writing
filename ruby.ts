@@ -43,8 +43,20 @@ const NAROU_RUBY_REGEX = /([一-龠々〆ヵヶ]+)《([^》]+)》/g;
 const EMPHASIS_REGEX = /《《([^》]+)》》/g;
 
 /**
+ * Emphasis Widget (Atomic element with dots)
+ */
+class EmphasisWidget extends WidgetType {
+    constructor(readonly text: string) { super() }
+    toDOM() {
+        let span = document.createElement("span")
+        span.className = "cm-emphasis"
+        span.textContent = this.text
+        return span
+    }
+}
+
+/**
  * Support for Aozora/Narou style ruby and emphasis dots.
- * Processed line by line within visible ranges for performance.
  */
 const rubyViewPlugin = ViewPlugin.fromClass(
     class {
@@ -62,15 +74,14 @@ const rubyViewPlugin = ViewPlugin.fromClass(
 
         buildDeco(view: EditorView) {
             const builder = new RangeSetBuilder<Decoration>();
-            const { selection } = view.state;
-            const selectionRanges = selection.ranges;
+            const selectionRanges = view.state.selection.ranges;
 
             for (const { from, to } of view.visibleRanges) {
                 let pos = from;
                 while (pos <= to) {
                     const line = view.state.doc.lineAt(pos);
                     const text = line.text;
-                    const matches: { from: number; to: number; type: 'ruby' | 'emphasis'; data?: { base: string; ruby: string } }[] = [];
+                    const matches: { from: number; to: number; type: 'ruby' | 'emphasis'; data?: { base: string; ruby: string } | string }[] = [];
 
                     // 1. AOZORA
                     AOZORA_RUBY_REGEX.lastIndex = 0;
@@ -105,7 +116,8 @@ const rubyViewPlugin = ViewPlugin.fromClass(
                         matches.push({
                             from: line.from + m.index,
                             to: line.from + m.index + m[0].length,
-                            type: 'emphasis'
+                            type: 'emphasis',
+                            data: m[1]
                         });
                     }
 
@@ -115,12 +127,10 @@ const rubyViewPlugin = ViewPlugin.fromClass(
                         const isCursorInside = selectionRanges.some(r => r.from <= match.to && r.to >= match.from);
                         if (isCursorInside) continue;
 
-                        if (match.type === 'ruby' && match.data) {
+                        if (match.type === 'ruby' && typeof match.data === 'object') {
                             builder.add(match.from, match.to, Decoration.replace({ widget: new RubyWidget(match.data.base, match.data.ruby) }));
-                        } else if (match.type === 'emphasis') {
-                            builder.add(match.from, match.from + 2, Decoration.replace({}));
-                            builder.add(match.from + 2, match.to - 2, Decoration.mark({ class: "cm-emphasis" }));
-                            builder.add(match.to - 2, match.to, Decoration.replace({}));
+                        } else if (match.type === 'emphasis' && typeof match.data === 'string') {
+                            builder.add(match.from, match.to, Decoration.replace({ widget: new EmphasisWidget(match.data) }));
                         }
                     }
                     pos = line.to + 1;
