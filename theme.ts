@@ -1,5 +1,5 @@
 import { EditorView } from "@codemirror/view";
-import { Extension } from "@codemirror/state";
+import type { Extension } from "@codemirror/state";
 
 /**
  * Basic theme for vertical writing mode (90deg rotation).

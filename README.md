@@ -10,7 +10,7 @@
 - **柔軟なテーマ**: フォント、サイズ、色などを自由にカスタマイズ可能。
 
 ## 🔗 デモ
-[http://playground.uo-uo.com/vertical](http://playground.uo-uo.com/vertical)
+[https://playground.uo-uo.com/vertical](https://playground.uo-uo.com/vertical)
 
 ---
 
@@ -47,8 +47,15 @@ installPatches();
 npm install @uozumi/cm-vertical-writing
 ```
 
-### 1. CSS の設定
-エディタを配置するコンテナを CSS で手動で回転させる必要があります：
+### 1. HTML と CSS の設定
+エディタを配置するコンテナを HTML で用意し、CSS で手動で回転させる必要があります：
+
+```html
+<div id="editor-container" class="editor-container">
+    <!-- CodeMirror はこの wrapper 内に生成されます -->
+    <div id="editor-wrapper" class="editor-wrapper"></div>
+</div>
+```
 
 ```css
 .editor-container {
@@ -78,12 +85,11 @@ import {
     verticalWriting, 
     setupVertical, 
     attachMouseListeners 
-} from "@uozum/cm-vertical-writing";
+} from "@uozumi/cm-vertical-writing";
 
 // 重要: 開始時に一度だけグローバルパッチを適用
 installPatches();
 
-const container = document.getElementById("editor-container")!;
 const wrapper = document.getElementById("editor-wrapper")!;
 
 const state = EditorState.create({
@@ -98,19 +104,23 @@ const state = EditorState.create({
     ],
 });
 
-const view = new EditorView({ state, parent: wrapper });
+new EditorView({ state, parent: wrapper });
 
 // アクティブな縦書きエディタを座標パッチロジックに紐付け
 setupVertical(true, wrapper);
 
 // マウスイベント（クリック位置の計算等）を補正
-const detachMouse = attachMouseListeners(wrapper);
+attachMouseListeners(wrapper);
 ```
 
 ### 3. クリーンアップ
 メモリリークを防ぎ、エディタ破棄時にグローバル環境を復元する場合：
 
 ```typescript
+// エディタのインスタンスやリスナーを保持してクリーンアップする場合：
+const view = new EditorView({ state, parent: wrapper });
+const detachMouse = attachMouseListeners(wrapper);
+
 function cleanup() {
     view.destroy();
     detachMouse();

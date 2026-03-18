@@ -3,7 +3,7 @@ import {
     type DecorationSet,
     EditorView,
     ViewPlugin,
-    ViewUpdate,
+    type ViewUpdate,
     WidgetType,
 } from "@codemirror/view";
 import { RangeSetBuilder, type Extension } from "@codemirror/state";

@@ -1,4 +1,4 @@
-import { ViewPlugin, Decoration, type DecorationSet, ViewUpdate, EditorView } from '@codemirror/view';
+import { ViewPlugin, Decoration, type DecorationSet, type ViewUpdate, EditorView } from '@codemirror/view';
 import { RangeSetBuilder } from '@codemirror/state';
 
 /**
