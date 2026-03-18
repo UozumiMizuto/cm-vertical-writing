@@ -41,7 +41,7 @@ describe('ruby.ts', () => {
             // Aozora ruby might fail to parse depending on full-width pipe vs ASCII pipe
             // and overlapping matches with Narou styles depending on the exact regex semantics.
             // However, we can reliably test that Narou and Emphasis widgets are created.
-            expect(widgets.length).toBeGreaterThanOrEqual(2);
+            expect(widgets.length).toBe(3);
         }
 
         view.destroy();
