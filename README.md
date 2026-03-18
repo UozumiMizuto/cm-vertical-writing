@@ -127,7 +127,10 @@ function cleanup() {
 
 1. **前提条件**: Python 3.6+ および `fonttools`
 2. 依存関係のインストール: `pip install fonttools`
-3. スクリプトの実行: `python scripts/create_vertical_font.py`
+3. スクリプトの実行:
+   ```bash
+   python scripts/create_vertical_font.py --input MyFont.ttf --output STVerticalMincho.ttf
+   ```
 4. 出力された `STVerticalMincho.ttf` をプロジェクトで読み込んで使用してください。
 
 ---

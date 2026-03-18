@@ -23,10 +23,10 @@ export const tateChuYokoPlugin = ViewPlugin.fromClass(class {
 
     buildDeco(view: EditorView) {
         const builder = new RangeSetBuilder<Decoration>();
+        const { selection } = view.state;
         const mark = Decoration.mark({ class: "cm-tcy" });
 
         // Match 2 digits, 2 Latin chars, or 1-2 punctuation marks (!, ?)
-        // Boundary check using lookahead/lookbehind to avoid \b issues in CJK
         const regex = /(?<![A-Za-z0-9])([A-Za-z0-9]{2}|[!?]{1,2})(?![A-Za-z0-9])/g;
 
         for (const { from, to } of view.visibleRanges) {
@@ -44,7 +44,14 @@ export const tateChuYokoPlugin = ViewPlugin.fromClass(class {
                     if (match.index >= endOffset) break;
                     const start = line.from + match.index;
                     const end = start + match[0].length;
-                    builder.add(start, end, mark);
+
+                    // COORDINATE STABILITY FIX:
+                    // Avoid splitting DOM inside line if selection intersects.
+                    // This follows the rule: "Don't divide DOM nodes in ways that break coordinate mapping".
+                    const isInside = selection.ranges.some(r => r.from <= end && r.to >= start);
+                    if (!isInside) {
+                        builder.add(start, end, mark);
+                    }
                 }
                 pos = line.to + 1;
             }
