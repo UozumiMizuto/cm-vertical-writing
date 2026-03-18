@@ -1,6 +1,6 @@
 {
     "name": "@uozumi/cm-vertical-writing",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "High-performance vertical writing extension for CodeMirror 6 using 90deg rotation hack.",
     "main": "./dist/index.umd.js",
     "module": "./dist/index.mjs",
