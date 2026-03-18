@@ -1,61 +1,75 @@
-# CodeMirror 6 Vertical Writing Extension (90deg Rotation)
+# CodeMirror 6 縦書き拡張 (90度回転方式)
 
-A high-performance vertical writing extension for CodeMirror 6 that bypasses browser-specific `writing-mode: vertical-rl` bugs by using a 90-degree rotation hack.
+ブラウザの `writing-mode: vertical-rl` のバグ（カーソルのズレや座標計算の不一致）を完全に回避し、90度回転ハックを使用して高いパフォーマンスと安定した表示を実現する CodeMirror 6 用の縦書き拡張機能です。
 
-## 🚀 Key Features
-- **Stable Layout**: No cursor drift or selection misalignment found in standard vertical-rl modes.
-- **Japanese Typography Support**:
-  - **Tate-chu-yoko (TCY)**: Rotates 2-character sequences like `!!`, `!?`, or `10-99` for readability.
-  - **Ruby Support**: Previews Aozora/Narou style ruby text (`|漢字《かんじ》`) and emphasis dots (`《《強調》》`).
-- **Flexible Theme**: Customizable font family, size, and colors.
+## 🚀 主な機能
+- **安定したレイアウト**: 標準的な `vertical-rl` モードで見られるカーソルのズレや選択範囲の乱れが発生しません。
+- **日本語タイポグラフィのサポート**:
+  - **縦中横 (TCY)**: `!!` や `!?`、あるいは 2 桁の数字（10-99）などを読みやすく回転させます。
+  - **ルビ・圏点サポート**: 青空文庫/なろう形式のルビ（`|漢字《かんじ》`）や傍点（`《《強調》》`）のプレビューに対応。
+- **柔軟なテーマ**: フォント、サイズ、色などを自由にカスタマイズ可能。
+
+## 🔗 デモ
+[http://playground.uo-uo.com/vertical](http://playground.uo-uo.com/vertical)
 
 ---
 
-## ⚠️ Important Architectural Requirements & Constraints
+## ⚠️ 重要な設計上の要件と制約
 
-### 1. Global Coordinate Patches
-Since this library rotates the entire editor globally using CSS transforms, CodeMirror's internal coordinate calculations break. We fix this by patching global DOM APIs (`getBoundingClientRect`, `caretRangeFromPoint`, etc.).
+### 1. グローバルな座標パッチ
+本ライブラリは CSS Transform を使用してエディタ全体を 90 度回転させるため、CodeMirror 内部の座標計算が正しく機能しません。これを解決するために、グローバルな DOM API (`getBoundingClientRect`, `caretRangeFromPoint` 等) にパッチを適用します。
 
-**You must call `installPatches()` once at the start of your application.**
+**アプリケーションの開始時に一度だけ `installPatches()` を呼び出す必要があります。**
+
 ```typescript
 import { installPatches, uninstallPatches } from "@uozum/cm-vertical-writing";
+
+// アプリケーションのエントリーポイントで一度だけ実行
 installPatches();
 ```
-*Note: We provide `uninstallPatches()` to restore original prototypes if needed.*
+*※ 必要に応じて元のプロトタイプを復元するための `uninstallPatches()` も提供しています。*
 
 > [!WARNING]
-> **Single Instance Constraint**: Due to the nature of global DOM patches, displaying multiple vertical editors on the same page is currently not supported.
+> **単一インスタンスの制約**: グローバルな DOM パッチの性質上、現在同一ページ内での複数エディタの同時表示には対応していません。
 
-### 2. Browser Compatibility
-The Tate-chu-yoko (TCY) implementation uses Regex Lookbehind (`(?<!...)`). This requires a modern browser (e.g., **Safari 16.4+**, **Chrome 62+**, **Firefox 78+**). If you need to support older versions of Safari/iOS, TCY may not function correctly.
+### 2. ブラウザの互換性
+縦中横 (TCY) の実装に正規表現の後読み (`(?<!...)`) を使用しているため、モダンブラウザ (**Safari 16.4+**, **Chrome 62+**, **Firefox 78+**) が必要です。
 
-### 3. Pre-Rotated Font
-This library requires a "pre-rotated" font where the glyphs themselves are rotated 90 degrees left. When the entire editor is rotated 90 degrees right via CSS, the text appears **upright (正立)**.
-
-We recommend using **Zen Old Mincho** (SIL OFL) and processing it with our provided Python script.
+### 3. 事前回転済みフォント
+本ライブラリでは、グリフ自体があらかじめ左に 90 度回転した「事前回転済みフォント」を使用します。エディタ全体を CSS で右に 90 度回転させることで、文字が正立して見える仕組みです。
 
 ---
 
-## 🛠 Usage
+## 🛠 使い方
 
-### 1. CSS Setup
-The editor container must be rotated manually via CSS:
+### インストール
+```bash
+npm install @uozum/cm-vertical-writing
+```
+
+### 1. CSS の設定
+エディタを配置するコンテナを CSS で手動で回転させる必要があります：
+
 ```css
 .editor-container {
-    width: 100%;
-    height: 100%;
+    width: 600px;
+    height: 400px;
+    position: relative;
+    overflow: hidden;
 }
 
 .editor-wrapper {
-    width: 100%;
-    height: 100%;
-    /* The Rotation Hack */
+    width: 400px;  /* コンテナの高さに合わせる */
+    height: 600px; /* コンテナの幅に合わせる */
+    
+    /* 90度回転ハック */
     transform: rotate(90deg) translateY(-100%);
     transform-origin: top left;
 }
 ```
 
-### 2. Editor Integration
+### 2. エディタへの組み込み
+
 ```typescript
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
@@ -66,15 +80,17 @@ import {
     attachMouseListeners 
 } from "@uozum/cm-vertical-writing";
 
-// IMPORTANT: Install global patches once at startup
+// 重要: 開始時に一度だけグローバルパッチを適用
 installPatches();
 
+const container = document.getElementById("editor-container")!;
 const wrapper = document.getElementById("editor-wrapper")!;
 
 const state = EditorState.create({
     doc: "吾輩は猫である。名前はまだ無い。",
     extensions: [
         verticalWriting({
+            // 事前回転済みフォントを指定
             fontFamily: "'STVerticalMincho', 'Noto Serif JP', serif",
             tcy: true,
             ruby: true
@@ -84,37 +100,38 @@ const state = EditorState.create({
 
 const view = new EditorView({ state, parent: wrapper });
 
-// Bind the active vertical editor to the coordinate patch logic
+// アクティブな縦書きエディタを座標パッチロジックに紐付け
 setupVertical(true, wrapper);
+
+// マウスイベント（クリック位置の計算等）を補正
 const detachMouse = attachMouseListeners(wrapper);
 ```
 
-### 3. Cleanup
-To prevent memory leaks and restore the global environment when the editor is destroyed:
+### 3. クリーンアップ
+メモリリークを防ぎ、エディタ破棄時にグローバル環境を復元する場合：
+
 ```typescript
 function cleanup() {
     view.destroy();
     detachMouse();
     setupVertical(false, null);
-    // Optional: Only if no more vertical editors will be used
+    // 以降、縦書きエディタを使用しない場合のみ任意で実行
     // uninstallPatches();
 }
 ```
 
 ---
 
-## ⚙️ How to Generate the Vertical Font
-We provide a script to modify an existing TTF font (e.g., Zen Old Mincho) for use with this library.
+## ⚙️ 縦書き用フォントの生成方法
+既存の TTF フォント（例：Zen Old Mincho）を本ライブラリで使用可能な形式（左に90度回転）に変換するスクリプトを提供しています。
 
-1. **Prerequisites**: Python 3.6+ and `fonttools`.
-2. Install dependencies: `pip install fonttools`
-3. Run the script: `python scripts/create_vertical_font.py`
-4. The resulting `STVerticalMincho.ttf` will be generated in your output directory.
-
-**License Notice**: Ensure the base font license (like SIL OFL 1.1) allows modifications and renaming before distributing your generated font.
+1. **前提条件**: Python 3.6+ および `fonttools`
+2. 依存関係のインストール: `pip install fonttools`
+3. スクリプトの実行: `python scripts/create_vertical_font.py`
+4. 出力された `STVerticalMincho.ttf` をプロジェクトで読み込んで使用してください。
 
 ---
 
-## 📄 License
-This library is licensed under the MIT License.
-The generated fonts are subject to their respective licenses (e.g., Zen Old Mincho is SIL OFL 1.1).
+## 📄 ライセンス
+本ライブラリは MIT ライセンスの下で公開されています。
+生成されるフォントについては、それぞれの元フォントのライセンスに従います（例：Zen Old Mincho は SIL OFL 1.1）。

@@ -2,9 +2,23 @@
     "name": "@uozum/cm-vertical-writing",
     "version": "1.0.0",
     "description": "High-performance vertical writing extension for CodeMirror 6 using 90deg rotation hack.",
-    "main": "index.ts",
+    "main": "./dist/index.umd.js",
+    "module": "./dist/index.mjs",
+    "types": "./index.ts",
+    "files": [
+        "dist",
+        "scripts",
+        "*.ttf",
+        "README.md",
+        "LICENSE"
+    ],
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@codemirror/state": "^6.0.0",
+        "@codemirror/view": "^6.0.0",
+        "vite": "^5.0.0"
     },
     "keywords": [
         "codemirror",
