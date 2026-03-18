@@ -1,0 +1,22 @@
+{
+    "name": "@uozum/cm-vertical-writing",
+    "version": "1.0.0",
+    "description": "High-performance vertical writing extension for CodeMirror 6 using 90deg rotation hack.",
+    "main": "index.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "codemirror",
+        "codemirror-6",
+        "vertical-writing",
+        "japanese",
+        "tate-gaki"
+    ],
+    "author": "UozumiMizuto",
+    "license": "MIT",
+    "peerDependencies": {
+        "@codemirror/state": "^6.0.0",
+        "@codemirror/view": "^6.0.0"
+    }
+}
