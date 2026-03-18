@@ -4,7 +4,7 @@
     "description": "High-performance vertical writing extension for CodeMirror 6 using 90deg rotation hack.",
     "main": "./dist/index.umd.js",
     "module": "./dist/index.mjs",
-    "types": "./index.ts",
+    "types": "./dist/index.d.ts",
     "files": [
         "dist",
         "scripts",
@@ -18,7 +18,8 @@
     "devDependencies": {
         "@codemirror/state": "^6.0.0",
         "@codemirror/view": "^6.0.0",
-        "vite": "^5.0.0"
+        "vite": "^5.0.0",
+        "vite-plugin-dts": "^4.5.4"
     },
     "keywords": [
         "codemirror",

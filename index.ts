@@ -3,10 +3,12 @@ import { installPatches, setupVertical, attachMouseListeners, getPhysicalRect, u
 import { tcy } from "./tcy";
 import { ruby } from "./ruby";
 import { verticalTheme } from "./theme";
+import { injectFont } from "./font";
 
 // Exporting types and core functions
 export { installPatches, setupVertical, attachMouseListeners, getPhysicalRect, uninstallPatches };
 export { tcy, ruby };
+export { injectFont };
 
 export interface VerticalWritingOptions {
     /** 

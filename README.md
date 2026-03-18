@@ -81,6 +81,7 @@ npm install @uozumi/cm-vertical-writing
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { 
+    injectFont,
     installPatches, 
     verticalWriting, 
     setupVertical, 
@@ -90,14 +91,18 @@ import {
 // 重要: 開始時に一度だけグローバルパッチを適用
 installPatches();
 
+// 縦書き用フォント (STVerticalMincho) を @font-face でドキュメントに注入
+// これにより fontFamily に 'STVerticalMincho' を指定可能になります
+injectFont();
+
 const wrapper = document.getElementById("editor-wrapper")!;
 
 const state = EditorState.create({
     doc: "吾輩は猫である。名前はまだ無い。",
     extensions: [
         verticalWriting({
-            // 事前回転済みフォントを指定
-            fontFamily: "'STVerticalMincho', 'Noto Serif JP', serif",
+            // injectFont() を呼んでいれば 'STVerticalMincho' がそのまま使えます
+            fontFamily: "'STVerticalMincho', serif",
             tcy: true,
             ruby: true
         }),
@@ -111,6 +116,30 @@ setupVertical(true, wrapper);
 
 // マウスイベント（クリック位置の計算等）を補正
 attachMouseListeners(wrapper);
+```
+
+#### Next.js など SSR 環境での利用
+
+`injectFont()` はサーバーサイドで呼ばれても安全（`document` が存在しない場合は何もしない）ですが、パス解決が環境に依存するため、**`fontUrl` オプションで明示的に指定することを推奨します**。
+
+Next.js の場合は、フォントファイルを `public/fonts/` に配置し、以下のように設定してください。
+
+```bash
+# node_modules からフォントを public にコピー（例: package.json の postinstall スクリプトで自動化）
+cp node_modules/@uozumi/cm-vertical-writing/dist/fonts/STVerticalMincho.ttf public/fonts/
+```
+
+```typescript
+// Next.js の Client Component 内（"use client" 宣言が必要）
+"use client";
+import { useEffect } from "react";
+import { injectFont, installPatches } from "@uozumi/cm-vertical-writing";
+
+useEffect(() => {
+    installPatches();
+    // public/fonts/ に配置したフォントを明示的に指定
+    injectFont({ fontUrl: "/fonts/STVerticalMincho.ttf" });
+}, []);
 ```
 
 ### 3. クリーンアップ
