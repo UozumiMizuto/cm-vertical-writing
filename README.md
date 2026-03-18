@@ -22,7 +22,7 @@
 **アプリケーションの開始時に一度だけ `installPatches()` を呼び出す必要があります。**
 
 ```typescript
-import { installPatches, uninstallPatches } from "@uozum/cm-vertical-writing";
+import { installPatches, uninstallPatches } from "@uozumi/cm-vertical-writing";
 
 // アプリケーションのエントリーポイントで一度だけ実行
 installPatches();
@@ -44,7 +44,7 @@ installPatches();
 
 ### インストール
 ```bash
-npm install @uozum/cm-vertical-writing
+npm install @uozumi/cm-vertical-writing
 ```
 
 ### 1. CSS の設定
