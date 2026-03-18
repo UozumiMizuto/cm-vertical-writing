@@ -11,8 +11,8 @@ const DOC = typeof document !== 'undefined' ? document : null;
 // @ts-ignore
 const _originals = WIN?.__CM_VERTICAL_ORIGINALS__ || {
     elementGBCR: Element.prototype.getBoundingClientRect,
-    rangeGBCR: Range.prototype.getBoundingClientRect,
-    rangeGetClientRects: Range.prototype.getClientRects,
+    rangeGBCR: Range.prototype.getBoundingClientRect || function() { return new DOMRect(); },
+    rangeGetClientRects: Range.prototype.getClientRects || function() { return []; },
     caretRange: DOC?.caretRangeFromPoint ? DOC.caretRangeFromPoint.bind(DOC) : null,
     // @ts-ignore
     caretPosition: DOC?.caretPositionFromPoint ? DOC.caretPositionFromPoint.bind(DOC) : null

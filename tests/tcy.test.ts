@@ -53,6 +53,44 @@ describe('tcy.ts', () => {
         document.body.removeChild(parent);
     });
 
+    it('updates decorations when document changes', () => {
+        const doc = "あいうえお";
+        const state = EditorState.create({
+            doc,
+            extensions: [tcy]
+        });
+
+        const parent = document.createElement('div');
+        document.body.appendChild(parent);
+
+        const view = new EditorView({ state, parent });
+
+        let plugin = view.plugin(tateChuYokoPlugin as any);
+        expect(plugin).toBeDefined();
+
+        if (plugin) {
+            let iter = plugin.decorations.iter();
+            let count = 0;
+            while (iter.value) { count++; iter.next(); }
+            expect(count).toBe(0);
+
+            // Dispatch a change
+            view.dispatch({
+                changes: { from: 5, insert: "12" }
+            });
+
+            // Re-fetch plugin and decorations after update
+            plugin = view.plugin(tateChuYokoPlugin as any);
+            iter = plugin!.decorations.iter();
+            count = 0;
+            while (iter.value) { count++; iter.next(); }
+            expect(count).toBe(1);
+        }
+
+        view.destroy();
+        document.body.removeChild(parent);
+    });
+
     it('does not create tcy decorations when cursor is inside', () => {
         const doc = "あいう12えお";
         const state = EditorState.create({

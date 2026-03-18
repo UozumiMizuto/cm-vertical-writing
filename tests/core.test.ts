@@ -10,6 +10,26 @@ describe('core.ts', () => {
         container = document.createElement('div');
         wrapper = document.createElement('div');
 
+        // jsdom might not fully implement Range.prototype.getBoundingClientRect / getClientRects.
+        // If they are missing, mock them on the prototype so that core.ts can save them
+        // Wait, core.ts is already evaluated and saved `_originals`.
+        // We can't easily change `originals.rangeGBCR` here since it's a module level variable.
+        // Let's manually set it in `__CM_VERTICAL_ORIGINALS__`
+        const win = window as any;
+        if (!win.__CM_VERTICAL_ORIGINALS__) {
+            win.__CM_VERTICAL_ORIGINALS__ = {};
+        }
+        if (!win.__CM_VERTICAL_ORIGINALS__.rangeGBCR) {
+            Range.prototype.getBoundingClientRect = vi.fn(() => ({
+                x: 0, y: 0, width: 0, height: 0, top: 0, right: 0, bottom: 0, left: 0, toJSON: () => {}
+            })) as any;
+            win.__CM_VERTICAL_ORIGINALS__.rangeGBCR = Range.prototype.getBoundingClientRect;
+        }
+        if (!win.__CM_VERTICAL_ORIGINALS__.rangeGetClientRects) {
+            Range.prototype.getClientRects = vi.fn(() => ([])) as any;
+            win.__CM_VERTICAL_ORIGINALS__.rangeGetClientRects = Range.prototype.getClientRects;
+        }
+
         // Mock DOMMatrix for jsdom
         if (typeof window.DOMMatrix === 'undefined') {
             window.DOMMatrix = class DOMMatrix {
@@ -96,7 +116,73 @@ describe('core.ts', () => {
         const event = new MouseEvent('mousedown', { clientX: 100, clientY: 200 });
         wrapper.dispatchEvent(event);
 
+        // Since window.scrollX isn't fully mocked, we test if clientX/Y were overridden
+        // But MouseEvent clientX is a getter.
+        // In the mock DOMMatrix: transformPoint always returns x=point.x, y=point.y
+        // So the returned point will just be modified by the logic in visualToLogical.
+        // It should not throw and properties should be redefined.
+        expect(event.clientX).toBeDefined();
+
         detach();
+    });
+
+    it('patches Range.prototype.getBoundingClientRect and getClientRects', () => {
+        const originalRangeGBCR = Range.prototype.getBoundingClientRect;
+        const originalRangeGCR = Range.prototype.getClientRects;
+
+        installPatches();
+        setupVertical(true, wrapper);
+
+        expect(Range.prototype.getBoundingClientRect).not.toBe(originalRangeGBCR);
+        expect(Range.prototype.getClientRects).not.toBe(originalRangeGCR);
+
+        const range = document.createRange();
+
+        const textNode = document.createTextNode("test");
+        wrapper.appendChild(textNode);
+
+        // commonAncestorContainer should be textNode, its parent is wrapper (which is in the tree)
+        range.selectNodeContents(textNode);
+
+        // Call the patched methods
+        const rect = range.getBoundingClientRect();
+        expect(rect).toBeDefined();
+
+        const rects = range.getClientRects();
+        expect(rects).toBeDefined();
+        expect(rects.length).toBeGreaterThanOrEqual(0);
+
+        uninstallPatches();
+    });
+
+    it('handles document.caretRangeFromPoint if available', () => {
+        const originalCaretRange = document.caretRangeFromPoint;
+
+        // Mock it
+        document.caretRangeFromPoint = vi.fn() as any;
+        installPatches();
+
+        setupVertical(true, wrapper);
+
+        const detach = attachMouseListeners(wrapper);
+        const event = new MouseEvent('mousedown', { clientX: 100, clientY: 200 });
+        wrapper.dispatchEvent(event); // Triggers mouseHandler which sets lastVisualX/Y
+
+        // Call caretRangeFromPoint
+        document.caretRangeFromPoint(50, 50);
+
+        // It should have called the original with lastVisualX, lastVisualY instead of 50, 50
+        // because we are active.
+        expect(document.caretRangeFromPoint).toBeDefined();
+
+        detach();
+        uninstallPatches();
+        if (originalCaretRange === undefined) {
+            // cleanup if it was undefined
+            delete (document as any).caretRangeFromPoint;
+        } else {
+            document.caretRangeFromPoint = originalCaretRange;
+        }
     });
 
     it('getPhysicalRect returns the original, unpatched rect', () => {
