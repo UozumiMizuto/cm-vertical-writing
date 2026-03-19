@@ -8,6 +8,7 @@
     "files": [
         "dist",
         "scripts",
+        "tests",
         "*.ttf",
         "README.md",
         "LICENSE"
