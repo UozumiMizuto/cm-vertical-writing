@@ -34,8 +34,9 @@ export const tateChuYokoPlugin = ViewPlugin.fromClass(class {
         const builder = new RangeSetBuilder<Decoration>();
         const { selection } = view.state;
 
-        // Match 2 digits, 2 Latin chars, or 1-2 punctuation marks (!, ?)
-        const regex = /(?<![A-Za-z0-9])([A-Za-z0-9]{2}|[!?]{1,2})(?![A-Za-z0-9])/g;
+        // Match 1-2 digits/letters or 1-2 punctuation marks (!, ?)
+        // Using word boundary (\b) for alphanumeric characters to provide better compatibility than lookbehind.
+        const regex = /\b[A-Za-z0-9]{1,2}\b|[!?]{1,2}/g;
 
         for (const { from, to } of view.visibleRanges) {
             let pos = from;
@@ -53,9 +54,7 @@ export const tateChuYokoPlugin = ViewPlugin.fromClass(class {
                     const start = line.from + match.index;
                     const end = start + match[0].length;
 
-                    // COORDINATE STABILITY FIX:
-                    // Only apply decoration when cursor is NOT inside.
-                    // Also use Replacement Widget instead of Mark to ensure atomic DOM node.
+                    // Only apply decoration when cursor is NOT inside (Atomic folding)
                     const isInside = selection.ranges.some(r => r.from <= end && r.to >= start);
                     if (!isInside) {
                         builder.add(start, end, Decoration.replace({ widget: new TcyWidget(match[0]) }));

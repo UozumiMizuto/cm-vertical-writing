@@ -33,7 +33,7 @@ installPatches();
 > **単一インスタンスの制約**: グローバルな DOM パッチの性質上、現在同一ページ内での複数エディタの同時表示には対応していません。
 
 ### 2. ブラウザの互換性
-縦中横 (TCY) の実装に正規表現の後読み (`(?<!...)`) を使用しているため、モダンブラウザ (**Safari 16.4+**, **Chrome 62+**, **Firefox 78+**) が必要です。
+縦中横 (TCY) の実装をより広範なブラウザで動作するように最適化しました。**Safari などの旧バージョンを含む、主要なモダンブラウザで安定して動作します。**
 
 ### 3. 事前回転済みフォント
 本ライブラリでは、グリフ自体があらかじめ左に 90 度回転した「事前回転済みフォント」を使用します。エディタ全体を CSS で右に 90 度回転させることで、文字が正立して見える仕組みです。
@@ -66,16 +66,18 @@ npm install @uozumi/cm-vertical-writing
 }
 
 .editor-wrapper {
-    width: 400px;  /* コンテナの高さに合わせる */
-    height: 600px; /* コンテナの幅に合わせる */
-    
-    /* 90度回転ハック */
+    /* 
+     * 重要: 回転後の見た目がコンテナに収まるよう、
+     * JavaScript で動的に width/height を入れ替えるのが最も安定します。
+     */
     transform: rotate(90deg) translateY(-100%);
     transform-origin: top left;
 }
 ```
 
-### 2. エディタへの組み込み
+### 2. エディタへの組み込みとサイズ同期のコツ
+
+縦書き（回転）状態では、ブラウザのスクロールや CodeMirror の仮想レンダリングを正しく機能させるために、**エディタの物理的な幅と高さを入れ替える**必要があります。
 
 ```typescript
 import { EditorState } from "@codemirror/state";
@@ -85,38 +87,39 @@ import {
     installPatches, 
     verticalWriting, 
     setupVertical, 
-    attachMouseListeners 
+    attachMouseListeners,
+    getOriginalRect 
 } from "@uozumi/cm-vertical-writing";
 
-// 重要: 開始時に一度だけグローバルパッチを適用
 installPatches();
-
-// 縦書き用フォント (STVerticalMincho) を @font-face でドキュメントに注入
-// これにより fontFamily に 'STVerticalMincho' を指定可能になります
 injectFont();
 
+const container = document.getElementById("editor-container")!;
 const wrapper = document.getElementById("editor-wrapper")!;
 
-const state = EditorState.create({
-    doc: "吾輩は猫である。名前はまだ無い。",
-    extensions: [
-        verticalWriting({
-            // injectFont() を呼んでいれば 'STVerticalMincho' がそのまま使えます
-            fontFamily: "'STVerticalMincho', serif",
-            tcy: true,
-            ruby: true
-        }),
-    ],
+// 1. サイズの同期（コンテナの W/H を入れ替えてエディタに適用）
+const rect = getOriginalRect(container);
+wrapper.style.width = `${rect.height}px`;
+wrapper.style.height = `${rect.width}px`;
+
+const view = new EditorView({
+    state: EditorState.create({
+        doc: "吾輩は猫である。名前はまだ無い。",
+        extensions: [
+            verticalWriting({ fontFamily: "'STVerticalMincho', serif" }),
+        ],
+    }),
+    parent: wrapper
 });
 
-new EditorView({ state, parent: wrapper });
-
-// アクティブな縦書きエディタを座標パッチロジックに紐付け
 setupVertical(true, wrapper);
-
-// マウスイベント（クリック位置の計算等）を補正
 attachMouseListeners(wrapper);
 ```
+
+> [!TIP]
+> **レスポンシブ対応**: `ResizeObserver` を使用して、コンテナのサイズが変わるたびに `wrapper` の `width` と `height` をスワップして更新するように実装すると、ウィンドウのリサイズ時にもレイアウトが崩れず非常に安定します。
+
+---
 
 #### Next.js など SSR 環境での利用
 

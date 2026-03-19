@@ -1,12 +1,26 @@
 import { type Extension } from "@codemirror/state";
-import { installPatches, setupVertical, attachMouseListeners, getPhysicalRect, uninstallPatches } from "./core";
+import {
+    installPatches,
+    setupVertical,
+    attachMouseListeners,
+    getPhysicalRect,
+    getOriginalRect,
+    uninstallPatches
+} from "./core";
 import { tcy } from "./tcy";
 import { ruby } from "./ruby";
 import { verticalTheme } from "./theme";
 import { injectFont } from "./font";
 
 // Exporting types and core functions
-export { installPatches, setupVertical, attachMouseListeners, getPhysicalRect, uninstallPatches };
+export {
+    installPatches,
+    setupVertical,
+    attachMouseListeners,
+    getPhysicalRect,
+    getOriginalRect,
+    uninstallPatches
+};
 export { tcy, ruby };
 export { injectFont };
 
@@ -24,10 +38,6 @@ export interface VerticalWritingOptions {
 
 /**
  * Entry point for the Vertical Writing library (CodeMirror 6 Extension).
- * 
- * DESIGN RATIONALE:
- * Browsers' `writing-mode: vertical-rl` often causes severe issues in CodeMirror 6
- * (cursor alignment, scroll performance, viewport calculation).
  * 
  * This library implements vertical writing by:
  * 1. Forcing `horizontal-tb` mode inside CodeMirror.
