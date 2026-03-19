@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import dts from 'vite-plugin-dts';
@@ -41,8 +42,17 @@ export default defineConfig({
     dts({
       insertTypesEntry: true,
       include: ['index.ts', 'core.ts', 'tcy.ts', 'ruby.ts', 'theme.ts', 'font.ts'],
-      exclude: ['vite.config.ts'],
+      exclude: ['vite.config.ts', 'tests'],
     }),
     copyFontsPlugin()
-  ]
+  ],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    include: ['tests/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
+  }
 });
